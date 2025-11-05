@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galería de Imágenes Interactiva</title>
+  <style>
+    /* Hover minimal: sólo agrandar un poco, sin cambiar borde ni sombra */
+    .thumb {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 3px solid #ccc;
+      transition: transform 180ms ease;
+      cursor: pointer;
+    }
+    .thumb:hover,
+    .thumb:focus {
+      transform: scale(1.06);
+      /* no box-shadow ni cambio de border-color */
+    }
+  </style>
+</head>
+<body>
+  <h1>Crear una Galería de Imágenes Interactiva</h1>
+  <p class="welcome">Haz clic en una imagen para verla más grande.</p>
+
+  <div class="gallery" id="gallery">
+    <div class="thumbnails" role="list">
+      <img class="thumb" role="listitem" src="https://picsum.photos/id/237/100" alt="Perro sentado" data-large="https://picsum.photos/id/237/300" >
+      <img class="thumb" role="listitem" src="https://picsum.photos/id/1025/100" alt="Caballo" data-large="https://picsum.photos/id/1025/300" >
+      <img class="thumb" role="listitem" src="https://picsum.photos/id/1062/100" alt="Montañas" data-large="https://picsum.photos/id/1062/300">
+      <img class="thumb" role="listitem" src="https://picsum.photos/id/10/100" alt="Perro mirando" data-large="https://picsum.photos/id/10/300">
+      <img class="thumb" role="listitem" src="https://picsum.photos/id/1003/100" alt="Flores" data-large="https://picsum.photos/id/1003/300">
+      <img class="thumb" role="listitem" src="https://picsum.photos/id/1027/100" alt="Ciudad nocturna" data-large="https://picsum.photos/id/1027/300">
+    </div>
+
+    <div class="preview" aria-live="polite">
+      <img id="previewImage" src="" alt="Vista previa" width="300" height="300">
+      <div id="previewTitle" class="title"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+  const gallery = document.getElementById('gallery');
+  if (!gallery) return;
+
+  const thumbs = gallery.querySelectorAll('.thumb');
+  const previewImage = document.getElementById('previewImage');
+  const previewTitle = document.getElementById('previewTitle');
+  if (!thumbs.length || !previewImage || !previewTitle) return;
+
+  // hacer miniaturas accesibles por teclado
+  thumbs.forEach(t => t.tabIndex = 0);
+
+  // manejador onload único para el efecto de fundido (fade-in)
+  previewImage.onload = () => previewImage.classList.add('visible');
+
+  const setPreview = (src, title) => {
+    previewImage.classList.remove('visible');
+    previewImage.src = src;
+    previewImage.alt = title;
+    previewTitle.textContent = title;
+  };
+  // inicializar con la primera miniatura
+  setPreview(thumbs[0].dataset.large, thumbs[0].dataset.title);
+
+  // delegación de eventos para clics (captura el clic en las miniaturas)
+  gallery.addEventListener('click', e => {
+    const t = e.target.closest('.thumb');
+    if (t) setPreview(t.dataset.large, t.dataset.title);
+  });
+
+  // teclado: Enter o Espacio cuando una miniatura está enfocada
+  gallery.addEventListener('keydown', e => {
+    const t = e.target;
+    if (t.classList && t.classList.contains('thumb') && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      setPreview(t.dataset.large, t.dataset.title);
+    }
+  });
+});
+
+  </script>
+</body>
+</html>

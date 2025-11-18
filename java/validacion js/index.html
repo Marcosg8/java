@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Formulario de Evaluación de Sostenibilidad</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Validaciones en cliente con JavaScript -->
+  <script src="validacion.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Validación Sostenibilidad Personal</h1>
+    <p>Breve formulario para estimar tu nivel de sostenibilidad.</p>
+  </header>
+
+  <main>
+    <!-- Formulario enviado a procesar.php (validación servidor como segunda capa) -->
+    <form id="sostenibilidadForm" action="procesar.php" method="post" novalidate>
+      <section>
+        <h2>Datos personales</h2>
+        <!-- Nombre obligatorio -->
+        <label>Nombre
+          <input type="text" name="nombre" id="nombre" required minlength="2" />
+        </label>
+
+        <!-- Email con patrón HTML5 -->
+        <label>Email
+          <input type="email" name="email" id="email" required />
+        </label>
+
+        <!-- Edad con límites -->
+        <label>Edad
+          <input type="number" name="edad" id="edad" min="10" max="120" required />
+        </label>
+      </section>
+
+      <section>
+        <h2>Consumo de energía</h2>
+        <label>Consumo aproximado de energía mensual
+          <select name="energia" id="energia" required>
+            <option value="">Selecciona</option>
+            <option value="bajo">Bajo</option>
+            <option value="medio">Medio</option>
+            <option value="alto">Alto</option>
+          </select>
+        </label>
+      </section>
+
+      <section>
+        <h2>Transporte</h2>
+        <fieldset>
+          <legend>¿Cuál es tu medio principal?</legend>
+          <label><input type="radio" name="transporte" value="activo" required /> Caminar/Bicicleta</label>
+          <label><input type="radio" name="transporte" value="publico" /> Transporte público</label>
+          <label><input type="radio" name="transporte" value="privado" /> Vehículo privado</label>
+        </fieldset>
+      </section>
+
+      <section>
+        <h2>Gestión de residuos</h2>
+        <label><input type="checkbox" name="separa" id="separa" value="si" /> Separo residuos en casa</label>
+      </section>
+
+      <section>
+        <h2>Consumo de agua</h2>
+        <label>Litros aproximados por persona/día
+          <input type="number" name="agua" id="agua" min="5" max="500" required />
+        </label>
+      </section>
+
+      <section>
+        <h2>Hábitos de consumo</h2>
+        <label>Frecuencia compra productos locales
+          <select name="consumo" id="consumo" required>
+            <option value="">Selecciona</option>
+            <option value="frecuente">Frecuente</option>
+            <option value="ocasional">Ocasional</option>
+            <option value="rara">Rara vez</option>
+          </select>
+        </label>
+      </section>
+
+      <div class="mensajes" id="mensajes" aria-live="polite"></div>
+
+      <footer>
+        <button type="submit">Calcular sostenibilidad</button>
+      </footer>
+    </form>
+  </main>
+
+</body>
+</html>

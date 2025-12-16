@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Árbol de palabras</title>
+	<style>
+		:root {
+			--bg: #0a0e27;
+			--row-gap: 4px;
+			--font: "Segoe UI", system-ui, -apple-system, sans-serif;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+			display: grid;
+			place-items: start center;
+			position: relative;
+			background: linear-gradient(135deg, #000000 0%, #0a0e27 50%, #001a4d 100%);
+			color: #f6f7fb;
+			font-family: var(--font);
+			overflow: hidden;
+		}
+
+		.tree {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: var(--row-gap);
+			text-align: center;
+			user-select: none;
+			padding: 24px;
+			position: relative;
+			z-index: 1;
+			height: 100vh;
+		}
+
+		.row {
+			display: flex;
+			justify-content: center;
+			gap: 8px;
+			font-size: 15px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			white-space: nowrap;
+			font-family: 'Courier New', monospace;
+			text-shadow: 0 0 5px currentColor,
+						 0 0 10px currentColor,
+						 0 0 15px currentColor;
+			filter: drop-shadow(0 0 10px rgba(0,0,0,0.35));
+			animation: glow 2.5s ease-in-out infinite alternate;
+		}
+
+		.greeting {
+		font-size: 62px;
+		font-weight: 100;
+		font-style: normal;
+		color: transparent;
+		-webkit-text-stroke: 2.5px #00fff6;
+		text-stroke: 2.5px #00fff6;
+		font-family: 'Space Grotesk', 'Orbitron', 'Michroma', sans-serif;
+		letter-spacing: 28px;
+		margin-bottom: 12px;
+		text-transform: uppercase;
+		perspective: 1200px;
+		transform-style: preserve-3d;
+		filter: drop-shadow(0 0 15px rgba(0, 255, 246, 1)) 
+				drop-shadow(0 0 30px rgba(0, 255, 246, 0.9))
+				drop-shadow(0 0 50px rgba(0, 255, 246, 0.7))
+				drop-shadow(0 0 70px rgba(0, 255, 246, 0.5))
+				drop-shadow(3px 3px 0px rgba(255, 0, 255, 0.4));
+		text-shadow: 
+				0 0 10px rgba(0, 255, 246, 0.8),
+				0 0 20px rgba(0, 255, 246, 0.6),
+				3px 3px 0px rgba(255, 0, 255, 0.3),
+				6px 6px 0px rgba(0, 255, 246, 0.2),
+				-2px -2px 5px rgba(255, 0, 255, 0.2);\n\t\tanimation: slideDown 1.5s ease-out forwards, twinkle 2s ease-in-out 1.5s infinite, spaceSway 3s ease-in-out infinite;\n\t\t}
+
+		.star {
+			width: 120px;
+			height: 120px;
+			position: relative;
+			filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.9)) 
+					drop-shadow(0 0 40px rgba(255, 0, 255, 0.7))
+					drop-shadow(0 0 60px rgba(0, 255, 255, 0.5));
+			animation: futureSpin 4s linear infinite;
+		}
+
+		.star::before {
+			content: "";
+			position: absolute;
+			inset: 50%;
+			transform: translate(-50%, -50%);
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(135deg, #00ffff 0%, #ff00ff 100%);
+			clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+			filter: brightness(0.9);
+			box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.4),
+					   0 0 30px rgba(255, 0, 255, 0.6);
+		}
+
+		.star::after {
+			content: "";
+			position: absolute;
+			inset: 50%;
+			transform: translate(-50%, -50%) rotate(45deg);
+			width: 70%;
+			height: 70%;
+			border: 2px solid #ff00ff;
+			clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+			box-shadow: 0 0 20px rgba(255, 0, 255, 0.8),
+					   inset 0 0 15px rgba(0, 255, 255, 0.5);
+		}
+
+		#snow {
+			position: fixed;
+			inset: 0;
+			pointer-events: none;
+			overflow: hidden;
+			z-index: 0;
+		}
+
+		.snowflake {
+			position: absolute;
+			top: -50px;
+			font-family: 'Courier New', monospace;
+			font-size: var(--fontSize, 16px);
+			font-weight: bold;
+			color: var(--matrixColor, #00ff41);
+			text-shadow: 0 0 5px currentColor,
+						 0 0 10px currentColor,
+						 0 0 15px currentColor;
+			opacity: 0;
+			animation: fall 8s linear infinite;
+			white-space: pre;
+			line-height: 1.2;
+			pointer-events: none;
+			display: block;
+		}
+
+		.snowflake::before,
+		.snowflake::after {
+			content: none;
+		}
+
+		.garland {
+			position: fixed;
+			inset: 0;
+			pointer-events: none;
+			overflow: hidden;
+		}
+
+		#garland-front { z-index: 2; }
+
+		.garland-dot {
+			position: absolute;
+			left: var(--garlandX, 50vw);
+			width: 3px;
+			height: 25px;
+			background: linear-gradient(180deg, 
+				transparent 0%, 
+				var(--neonColor, #00FFC8) 20%, 
+				var(--neonColor, #00FFC8) 80%, 
+				transparent 100%);
+			border-radius: 50%;
+			box-shadow: 
+				0 0 10px var(--neonColor, #00FFC8),
+				0 0 20px var(--neonColor, #00FFC8),
+				0 0 30px var(--neonColor, #00FFC8),
+				0 0 40px var(--neonColor, #00FFC8),
+				0 0 50px var(--neonColor, #00FFC8);
+			opacity: 0.95;
+			will-change: transform, opacity;
+			animation: snakeDown var(--duration, 8s) ease-in-out infinite;
+			filter: blur(0.5px);
+		}
+
+
+
+		@keyframes holoGlow {
+			0%, 100% {
+				box-shadow: 
+					0 0 20px rgba(0, 255, 255, 0.8),
+					0 0 40px rgba(255, 0, 255, 0.5),
+					inset -8px 0 15px rgba(0, 255, 255, 0.3),
+					inset 8px 0 15px rgba(255, 0, 255, 0.3);
+			}
+			50% {
+				box-shadow: 
+					0 0 30px rgba(0, 255, 255, 0.95),
+					0 0 60px rgba(255, 0, 255, 0.7),
+					inset -8px 0 15px rgba(0, 255, 255, 0.5),
+					inset 8px 0 15px rgba(255, 0, 255, 0.5);
+			}
+		}
+
+		@keyframes glow {
+			from { opacity: 0.8; }
+			to { opacity: 1; }
+		}
+
+		@keyframes fadePulse {
+			0% { opacity: 0.55; }
+			45% { opacity: 1; }
+			100% { opacity: 0.68; }
+		}
+
+		@keyframes twinkle {
+			0% { transform: translateY(-2px) scale(1); opacity: 0.9; }
+			50% { transform: translateY(1px) scale(1.08); opacity: 1; }
+			100% { transform: translateY(-1px) scale(1); opacity: 0.9; }
+		}
+
+		@keyframes futureSpin {
+			0% { 
+				transform: rotate(0deg) scale(1); 
+			}
+			50% { 
+				transform: rotate(180deg) scale(1.05); 
+			}
+			100% { 
+				transform: rotate(360deg) scale(1); 
+			}
+		}
+
+		@keyframes slideDown {
+			0% { 
+				transform: translateY(-100px);
+				opacity: 0;
+			}
+			100% { 
+				transform: translateY(0);
+				opacity: 1;
+			}
+		}
+
+		@keyframes spaceSway {
+			0%, 100% { 
+				transform: rotateX(0deg) rotateZ(-1deg);
+			}
+			50% { 
+				transform: rotateX(2deg) rotateZ(1deg);
+			}
+		}
+
+		@keyframes snakeDown {
+			0% {
+				transform: translate3d(
+					calc(var(--x0, 0px) - var(--amp, 32px) * 0.4),
+					calc(var(--startY, -8vh) - 6vh),
+					0
+				) rotate(0deg) scale(var(--scale, 1));
+				opacity: 0;
+			}
+			5% {
+				transform: translate3d(
+					calc(var(--x0, 0px) + var(--amp, 32px) * 0.45),
+					calc(var(--startY, -8vh) + 4vh),
+					0
+				) rotate(90deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			10% {
+				transform: translate3d(
+					calc(var(--x0, 0px) - var(--amp, 32px) * 0.5),
+					calc(var(--startY, -8vh) + 8vh),
+					0
+				) rotate(180deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			15% {
+				transform: translate3d(
+					calc(var(--x0, 0px) + var(--amp, 32px) * 0.75),
+					calc(var(--startY, -8vh) + 12vh),
+					0
+				) rotate(270deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			20% {
+				transform: translate3d(
+					calc(var(--x0, 0px) - var(--amp, 32px) * 0.9),
+					calc(var(--startY, -8vh) + 16vh),
+					0
+				) rotate(360deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			25% {
+				transform: translate3d(
+					calc(var(--x0, 0px) + var(--amp, 32px) * 1.1),
+					calc(var(--startY, -8vh) + 20vh),
+					0
+				) rotate(450deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			30% {
+				transform: translate3d(
+					calc(var(--x0, 0px) - var(--amp, 32px) * 1.3),
+					calc(var(--startY, -8vh) + 24vh),
+					0
+				) rotate(540deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			35% {
+				transform: translate3d(
+					calc(var(--x0, 0px) + var(--amp, 32px) * 1.5),
+					calc(var(--startY, -8vh) + 28vh),
+					0
+				) rotate(630deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			40% {
+				transform: translate3d(
+					calc(var(--x0, 0px) - var(--amp, 32px) * 1.6),
+					calc(var(--startY, -8vh) + 32vh),
+					0
+				) rotate(720deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			45% {
+				transform: translate3d(
+					calc(var(--x0, 0px) + var(--amp, 32px) * 1.75),
+					calc(var(--startY, -8vh) + 36vh),
+					0
+				) rotate(810deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			50% {
+				transform: translate3d(
+					calc(var(--x0, 0px) - var(--amp, 32px) * 1.8),
+					calc(var(--startY, -8vh) + 40vh),
+					0
+				) rotate(900deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			55% {
+				transform: translate3d(
+					calc(var(--x0, 0px) * 0.5),
+					calc(var(--startY, -8vh) + 44vh),
+					0
+				) rotate(990deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			60% {
+				transform: translate3d(
+					calc(var(--x0, 0px) * 0.2),
+					calc(var(--startY, -8vh) + 48vh),
+					0
+				) rotate(1080deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			65% {
+				transform: translate3d(
+					0px,
+					calc(var(--startY, -8vh) + 75vh),
+					0
+				) rotate(1170deg) scale(var(--scale, 1));
+				opacity: 1;
+			}
+			70% {
+				transform: translate3d(
+					0px,
+					calc(var(--startY, -8vh) + 85vh),
+					0
+				) rotate(1260deg) scale(var(--scale, 1));
+				opacity: 0;
+			}
+			100% {
+				transform: translate3d(
+					0px,
+					calc(var(--startY, -8vh) + 85vh),
+					0
+				) rotate(1260deg) scale(var(--scale, 1));
+				opacity: 0;
+			}
+		}
+
+		@keyframes fall {
+			0% { 
+				transform: translate3d(0, -50px, 0); 
+				opacity: 0; 
+			}
+			5% { 
+				opacity: 1; 
+			}
+			85% { 
+				opacity: 0.8; 
+			}
+			100% { 
+				transform: translate3d(var(--drift, 0px), 110vh, 0); 
+				opacity: 0; 
+			}
+		}
+
+		@media (max-width: 1024px) {
+			.greeting {
+				font-size: clamp(32px, 6vw, 62px);
+				letter-spacing: clamp(12px, 3vw, 28px);
+				-webkit-text-stroke: 2px #00fff6;
+				text-stroke: 2px #00fff6;
+			}
+			
+			.star {
+				width: clamp(80px, 15vw, 120px);
+				height: clamp(80px, 15vw, 120px);
+			}
+			
+			.row {
+				font-size: clamp(12px, 2vw, 15px);
+				gap: clamp(4px, 1vw, 8px);
+			}
+			
+
+		}
+
+		@media (max-width: 768px) {
+			.greeting {
+				font-size: clamp(24px, 5vw, 40px);
+				letter-spacing: clamp(8px, 2vw, 16px);
+				-webkit-text-stroke: 1.5px #00fff6;
+				text-stroke: 1.5px #00fff6;
+				text-align: center;
+			}
+			
+			.star {
+				width: clamp(60px, 12vw, 90px);
+				height: clamp(60px, 12vw, 90px);
+			}
+			
+			.row {
+				flex-wrap: wrap;
+				font-size: clamp(11px, 1.8vw, 13px);
+				justify-content: center;
+			}
+			
+			.tree {
+				padding: 16px 8px;
+				width: 100vw;
+				align-items: center;
+			}
+		}
+
+		@media (max-width: 480px) {
+			.greeting {
+				font-size: clamp(28px, 7vw, 42px);
+				letter-spacing: clamp(6px, 2vw, 14px);
+				-webkit-text-stroke: 1.5px #00fff6;
+				text-stroke: 1.5px #00fff6;
+				margin-bottom: 16px;
+				text-align: center;
+			}
+			
+			.star {
+				width: 75px;
+				height: 75px;
+				margin-bottom: 20px;
+			}
+			
+			.row {
+				font-size: 10px;
+				gap: 4px;
+				justify-content: center;
+			}
+			
+			.tree {
+				padding: 100px 8px 20px 8px;
+				width: 100vw;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				place-items: center;
+			}
+		}
+	</style>
+</head>
+<body>
+		<div class="tree" id="tree"></div>
+		<div id="garland-front" class="garland"></div>
+		<div id="snow"></div>
+
+	<script>
+		// Palabras y colores con los que construiremos el árbol
+		const words = [
+			"amor", "familia", "besos", "felicidad", "abrazo", "cariño", "alegría",
+			"paz", "sonrisa", "amistad", "luz", "calor"
+		];
+
+		const palette = [
+			"#00ffff", "#ff00ff", "#00ff88", "#ff0088", "#0088ff", "#ffff00",
+			"#ff88ff", "#00ffff", "#88ff00", "#ff0000", "#00ff00", "#0088ff"
+		];
+
+		// Más filas para un árbol alto pero más estrecho
+		const layers = [
+			1, 2, 2, 3, 3, 4, 4, 5, 5, 6,
+			6, 7, 7, 8, 8, 8, 9, 10, 10, 11
+		];
+		const tree = document.getElementById("tree");
+		const snow = document.getElementById("snow");
+		const garlandFront = document.getElementById("garland-front");
+
+		const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+		const createRow = (count) => {
+			const row = document.createElement("div");
+			row.className = "row";
+			for (let i = 0; i < count; i++) {
+				const span = document.createElement("span");
+				span.textContent = pick(words);
+				span.style.color = pick(palette);
+				const delay = (Math.random() * 1.6).toFixed(2);
+				const duration = (2 + Math.random() * 1.5).toFixed(2);
+				span.style.animation = `fadePulse ${duration}s ease-in-out ${delay}s infinite alternate`;
+				row.appendChild(span);
+			}
+			return row;
+		};
+
+		const buildTree = () => {
+			const greeting = document.createElement("div");
+			greeting.className = "greeting";
+			greeting.textContent = "MERRY CHRISTMAS";
+			tree.appendChild(greeting);
+
+			const star = document.createElement("div");
+			star.className = "star";
+			tree.appendChild(star);
+
+			// Crear forma del árbol con espacios vacíos en lugar de palabras
+			layers.forEach((count) => {
+				const row = document.createElement("div");
+				row.className = "row";
+				row.style.visibility = "hidden";
+				row.style.height = "0";
+				for (let i = 0; i < count; i++) {
+					const span = document.createElement("span");
+					span.textContent = " ";
+					row.appendChild(span);
+				}
+				tree.appendChild(row);
+			});
+		};
+
+		const createHelix = (container, count, baseOffset = 0, phaseShift = 0) => {
+			const neonColors = [
+				"#00ffff", "#ff00ff", "#00ff88", "#ff0088", 
+				"#0088ff", "#ffff00", "#ff88ff", "#00ffff"
+			];
+			
+			const frag = document.createDocumentFragment();
+			for (let i = 0; i < count; i++) {
+				const dot = document.createElement("span");
+				dot.className = "garland-dot";
+				const height = (Math.random() * 20 + 20).toFixed(1);
+				const delay = -(i * 0.16 + phaseShift + Math.random() * 0.18).toFixed(2);
+				const duration = (30 + Math.random() * 10).toFixed(2);
+				const jitter = (Math.random() * 8 - 4).toFixed(1);
+				const amp = (Math.random() * 30 + 45).toFixed(1);
+				const neonColor = pick(neonColors);
+				
+				dot.style.height = `${height}px`;
+				dot.style.setProperty("--x0", `${baseOffset + parseFloat(jitter)}px`);
+				dot.style.setProperty("--scale", `${(0.9 + Math.random() * 0.2).toFixed(2)}`);
+				dot.style.setProperty("--duration", `${duration}s`);
+				dot.style.setProperty("--amp", `${amp}px`);
+				dot.style.setProperty("--neonColor", neonColor);
+				dot.style.animationDelay = `${delay}s`;
+				frag.appendChild(dot);
+			}
+			container.appendChild(frag);
+		};
+
+		const createSnow = (count = 60) => {
+			// Caracteres estilo Matrix
+			const matrixChars = [
+				"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+				"ア", "イ", "ウ", "エ", "オ", "カ", "キ", "ク", "ケ", "コ",
+				"サ", "シ", "ス", "セ", "ソ", "タ", "チ", "ツ", "テ", "ト",
+				"ナ", "ニ", "ヌ", "ネ", "ノ", "ハ", "ヒ", "フ", "ヘ", "ホ",
+				"マ", "ミ", "ム", "メ", "モ", "ヤ", "ユ", "ヨ", "ラ", "リ",
+				"ル", "レ", "ロ", "ワ", "ヲ", "ン"
+			];
+			
+			const matrixColors = [
+				"#00ffff", "#ff00ff", "#00ff88", "#ff0088", "#0088ff",
+				"#ffff00", "#ff88ff", "#00ff00"
+			];
+			
+			const frag = document.createDocumentFragment();
+			for (let i = 0; i < count; i++) {
+				const flake = document.createElement("span");
+				flake.className = "snowflake";
+				
+				// Generar cadena de caracteres (3-8 caracteres)
+				const length = Math.floor(Math.random() * 6) + 3;
+				let text = "";
+				for (let j = 0; j < length; j++) {
+					text += pick(matrixChars) + "\n";
+				}
+				flake.textContent = text;
+				
+				const fontSize = (Math.random() * 8 + 12).toFixed(1);
+				// Solo en los laterales: 0-30% o 70-100%
+				const left = Math.random() > 0.5 
+					? Math.random() * 30 
+					: 70 + Math.random() * 30;
+				const delay = (Math.random() * 8).toFixed(2);
+				const duration = (8 + Math.random() * 8).toFixed(2);
+				const drift = (Math.random() * 30 - 15).toFixed(1);
+				const color = pick(matrixColors);
+				
+				flake.style.setProperty("--fontSize", `${fontSize}px`);
+				flake.style.setProperty("--matrixColor", color);
+				flake.style.left = `${left}vw`;
+				flake.style.animationDuration = `${duration}s`;
+				flake.style.animationDelay = `${delay}s`;
+				flake.style.setProperty("--drift", `${drift}px`);
+				
+				frag.appendChild(flake);
+			}
+			snow.appendChild(frag);
+		};
+
+		buildTree();
+		const positionGarland = () => {
+			const starEl = tree.querySelector(".star");
+			if (!starEl) return;
+			const starRect = starEl.getBoundingClientRect();
+			const cx = starRect.left + starRect.width / 2;
+			const cyStart = starRect.bottom;
+			const startYvh = (cyStart / window.innerHeight) * 100;
+			const endYvh = 75;
+			garlandFront.style.setProperty("--garlandX", `${cx}px`);
+			garlandFront.style.setProperty("--startY", `${startYvh}vh`);
+			garlandFront.style.setProperty("--endY", `${endYvh}vh`);
+		};
+
+		createHelix(garlandFront, 250, 0, 0);
+		positionGarland();
+		window.addEventListener("resize", positionGarland);
+		createSnow();
+	</script>
+</body>
+</html>
